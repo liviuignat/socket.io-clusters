@@ -25,19 +25,27 @@ var Server = function(options) {
   this.options = options;
   this.app = express();
   this.router = new express.Router();
+
+  this.http = require('http').Server(this.app);
+  this.io = socketIo(this.http);
+  this.io.serveClient(true);
 };
 
 Server.prototype.start = function() {
   var serverPort = config.server.port;
 
-  var server = this.app.listen(serverPort, function(err) {
+  this.io.adapter(socketRedis({
+    port: config.redis.port,
+    host: config.redis.host
+  }));
+
+  this.http.listen(serverPort, function(err) {
     if (err) {
       console.error('Error: ' + err);
       return process.exit(1);
     }
-
     console.log('%s: Node server started on port %d ... Cluster id: %d', new Date(Date.now()), serverPort, cluster.worker ? cluster.worker.id : 'none');
-  });
+  }.bind(this));
 
   return this;
 };
@@ -81,7 +89,17 @@ Server.prototype.setupApp = function() {
 };
 
 Server.prototype.setupRoutes = function() {
+  var io = this.io;
+
   this.app.get('/', routes.indexGet);
+
+  io.on('connection', function(socket) {
+    socket.on('chat message', function(msg) {
+      io.emit('chat message', msg);
+    });
+  });
+
+
   return this;
 };
 
