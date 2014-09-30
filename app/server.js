@@ -1,5 +1,6 @@
 var cluster = require('cluster');
 var os = require('os');
+var sticky = require('sticky-session');
 
 var util = require('util');
 var path = require('path');
@@ -27,13 +28,16 @@ var Server = function(options) {
   this.router = new express.Router();
 
   this.http = require('http').Server(this.app);
-  this.io = socketIo(this.http);
-  this.io.serveClient(true);
 
-  this.io.adapter(socketRedis({
-    port: config.redis.port,
-    host: config.redis.host
-  }));
+  if (this.options.enableSocket) {
+    this.io = socketIo(this.http);
+    this.io.serveClient(true);
+
+    this.io.adapter(socketRedis({
+      port: config.redis.port,
+      host: config.redis.host
+    }));
+  }
 };
 
 Server.prototype.start = function() {
@@ -48,28 +52,6 @@ Server.prototype.start = function() {
 
   return this;
 };
-
-Server.prototype.startClusters = function() {
-  //this.start();
-
-  var numCPUs = os.cpus().length;
-
-  if (cluster.isMaster) {
-    // Fork workers.
-    for (var i = 0; i < numCPUs; i++) {
-      cluster.fork();
-    }
-
-    cluster.on('exit', function(worker, code, signal) {
-      console.log('worker ' + worker.process.pid + ' died');
-    });
-  } else {
-    // Workers can share any TCP connection
-    // In this case its a HTTP server
-    this.start();
-  }
-  return this;
-}
 
 Server.prototype.setupApp = function() {
   var sessionRedisClient = redis.createClient(config.redis.port, config.redis.host);
@@ -110,15 +92,18 @@ Server.prototype.setupApp = function() {
 };
 
 Server.prototype.setupRoutes = function() {
-  var io = this.io;
 
   this.app.get('/', routes.indexGet);
 
-  io.on('connection', function(socket) {
-    socket.on('chat message', function(msg) {
-      io.emit('chat message', msg);
+  if (this.io) {
+    var io = this.io;
+
+    io.on('connection', function(socket) {
+      socket.on('chat message', function(msg) {
+        io.emit('chat message', msg);
+      });
     });
-  });
+  }
 
 
   return this;
