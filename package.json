@@ -1,0 +1,25 @@
+{
+  "name": "socket.io-clusters",
+  "version": "0.0.1",
+  "description": "Small sample application to demonstrate socket.io clustering",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/liviuignat/socket.io-clusters.git"
+  },
+  "keywords": [
+    "socket.io",
+    "clusters",
+    "socket.io-redis",
+    "sample"
+  ],
+  "author": "liviu@ignat.email",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/liviuignat/socket.io-clusters/issues"
+  },
+  "homepage": "https://github.com/liviuignat/socket.io-clusters"
+}

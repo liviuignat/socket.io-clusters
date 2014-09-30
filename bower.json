@@ -1,0 +1,25 @@
+{
+  "name": "socket.io-clusters",
+  "version": "0.0.1",
+  "homepage": "https://github.com/liviuignat/socket.io-clusters",
+  "description": "Socket.io sample",
+  "moduleType": [
+    "amd",
+    "es6",
+    "globals",
+    "node",
+    "yui"
+  ],
+  "authors": [
+    "liviu@ignat.email"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
