@@ -29,16 +29,15 @@ var Server = function(options) {
   this.http = require('http').Server(this.app);
   this.io = socketIo(this.http);
   this.io.serveClient(true);
-};
-
-Server.prototype.start = function() {
-  var serverPort = config.server.port;
 
   this.io.adapter(socketRedis({
     port: config.redis.port,
     host: config.redis.host
   }));
+};
 
+Server.prototype.start = function() {
+  var serverPort = config.server.port;
   this.http.listen(serverPort, function(err) {
     if (err) {
       console.error('Error: ' + err);
@@ -49,6 +48,28 @@ Server.prototype.start = function() {
 
   return this;
 };
+
+Server.prototype.startClusters = function() {
+  //this.start();
+
+  var numCPUs = os.cpus().length;
+
+  if (cluster.isMaster) {
+    // Fork workers.
+    for (var i = 0; i < numCPUs; i++) {
+      cluster.fork();
+    }
+
+    cluster.on('exit', function(worker, code, signal) {
+      console.log('worker ' + worker.process.pid + ' died');
+    });
+  } else {
+    // Workers can share any TCP connection
+    // In this case its a HTTP server
+    this.start();
+  }
+  return this;
+}
 
 Server.prototype.setupApp = function() {
   var sessionRedisClient = redis.createClient(config.redis.port, config.redis.host);
